@@ -20,6 +20,7 @@ FROM alpine:latest
 
 # 设置工作目录
 WORKDIR /app
+RUN apk add --no-cache tzdata
 
 # 从构建阶段复制编译好的应用和资源
 COPY --from=builder /app/aurora /app/aurora
@@ -28,5 +29,4 @@ COPY harPool /app/harPool
 # 暴露端口
 EXPOSE 8080
 
-# 运行应用，重定向日志输出到 /dev/null
-CMD [ "/bin/sh", "-c", "./aurora > /dev/null 2>&1" ]
+CMD ["/app/aurora"]

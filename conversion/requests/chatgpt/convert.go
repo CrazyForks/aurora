@@ -14,9 +14,6 @@ import (
 func ConvertAPIRequest(api_request official_types.APIRequest, secret *tokens.Secret, requireArk bool, proxy string) chatgpt_types.ChatGPTRequest {
 	chatgpt_request := chatgpt_types.NewChatGPTRequest()
 	var api_version int
-	if secret.PUID == "" {
-		api_request.Model = "gpt-3.5"
-	}
 	if strings.HasPrefix(api_request.Model, "gpt-3.5") {
 		api_version = 3
 		chatgpt_request.Model = "text-davinci-002-render-sha"
@@ -24,12 +21,15 @@ func ConvertAPIRequest(api_request official_types.APIRequest, secret *tokens.Sec
 		api_version = 4
 		chatgpt_request.Model = api_request.Model
 		// Cover some models like gpt-4-32k
+		if api_request.Model == "gpt-4o" {
+			chatgpt_request.Model = "gpt-4o"
+		}
 		if len(api_request.Model) >= 7 && api_request.Model[6] >= 48 && api_request.Model[6] <= 57 {
 			chatgpt_request.Model = "gpt-4"
 		}
 	}
 	if requireArk {
-		token, err := arkose.GetOpenAIToken(api_version, secret.PUID, proxy)
+		token, err := arkose.GetOpenAIToken(api_version, secret.PUID, "", proxy)
 		if err == nil {
 			chatgpt_request.ArkoseToken = token
 		} else {
@@ -57,7 +57,7 @@ func RenewTokenForRequest(request *chatgpt_types.ChatGPTRequest, puid string, pr
 	} else {
 		api_version = 3
 	}
-	token, err := arkose.GetOpenAIToken(api_version, puid, proxy)
+	token, err := arkose.GetOpenAIToken(api_version, puid, "", proxy)
 	if err == nil {
 		request.ArkoseToken = token
 	} else {
